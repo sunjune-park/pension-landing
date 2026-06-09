@@ -693,15 +693,15 @@
         resultCard.scrollIntoView({behavior: 'smooth', block: 'center'});
     }
 
-    // 폼 제출 로직 (검증 추가)
+    // 폼 제출 로직 (유효성 검증 + 픽셀 발송 + Netlify AJAX 제출)
     function submitForm(e) {
-        e.preventDefault();
+        e.preventDefault(); // 기본 새로고침 방지
         
         const name = document.getElementById('userName').value;
         const phone = document.getElementById('userPhone').value;
         const dob = document.getElementById('userDob').value;
         
-        // 1. 이름 검증 (완성형 한글 2자 이상만 허용. 영문, 숫자, 특수문자, 공백 차단)
+        // 1. 이름 검증
         const nameRegex = /^[가-힣]{2,}$/;
         if(!nameRegex.test(name)) {
             alert('정확한 이름을 한글로만 입력해주세요. (영문, 특수문자, 공백 제외)');
@@ -709,7 +709,7 @@
             return;
         }
         
-        // 2. 연락처 검증 (하이픈 포함/미포함 모두 허용, 일반적인 휴대폰 번호 형식)
+        // 2. 연락처 검증
         const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
         if(!phoneRegex.test(phone)) {
             alert('올바른 연락처 형식을 입력해주세요.\n(예: 010-1234-5678 또는 01012345678)');
@@ -717,7 +717,7 @@
             return;
         }
 
-        // 3. 생년월일 검증 (숫자 6자리만 허용)
+        // 3. 생년월일 검증
         const dobRegex = /^[0-9]{6}$/;
         if(!dobRegex.test(dob)) {
             alert('생년월일 6자리를 정확히 숫자로만 입력해주세요.\n(예: 720101)');
@@ -725,9 +725,27 @@
             return;
         }
 
-        // 검증 통과 시
-        alert('진단 신청이 완료되었습니다. 담당자가 곧 연락드리겠습니다.');
-        document.getElementById('consultForm').reset();
+        // 💡 모든 검증을 통과했을 때 Netlify 전송 및 메타 픽셀 '등록 완료' 이벤트 발생
+        const formElement = document.getElementById('consultForm');
+        const formData = new FormData(formElement);
+
+        fetch("/", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams(formData).toString()
+        })
+        .then(() => {
+            // 메타 픽셀 '등록 완료(CompleteRegistration)' 이벤트 전송
+            if (typeof fbq === 'function') {
+                fbq('track', 'CompleteRegistration');
+            }
+            alert('진단 신청이 완료되었습니다. 담당자가 곧 연락드리겠습니다.');
+            formElement.reset(); // 성공 후 폼 초기화
+        })
+        .catch((error) => {
+            console.error(error);
+            alert('신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        });
     }
 </script>
 </body>
