@@ -1,3 +1,4 @@
+HTML
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -12,9 +13,9 @@
             --bg-color: #F7F8FA;
             --text-main: #1A1F27;
             --text-sub: #666D75;
-            --mirae-orange: #F37321; /* 미래에셋 메인 오렌지 */
+            --mirae-orange: #F37321;
             --light-orange: #FFF4ED;
-            --mirae-navy: #003569; /* 미래에셋 네이비 (신뢰감) */
+            --mirae-navy: #003569;
             --light-navy: #F0F5FA;
             --card-bg: #FFFFFF;
             --line-color: #EAECF0;
@@ -31,7 +32,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         body {
-            background-color: #E5E7EB; /* 데스크톱 배경 */
+            background-color: #E5E7EB;
             color: var(--text-main);
             line-height: 1.5;
         }
@@ -40,14 +41,14 @@
             letter-spacing: -0.5px;
         }
 
-        /* --- 앱 컨테이너 (모바일 우선/데스크톱 앱뷰) --- */
+        /* --- 앱 컨테이너 --- */
         .app-container {
             max-width: var(--app-width);
             margin: 0 auto;
             background-color: var(--bg-color);
             min-height: 100vh;
             position: relative;
-            padding-bottom: 80px; /* Sticky CTA 공간 */
+            padding-bottom: 80px;
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
         }
 
@@ -168,9 +169,7 @@
         .primary-btn:active { opacity: 0.8; }
 
         /* --- 입력 폼 (진단 / 리드) --- */
-        .input-group {
-            margin-bottom: 20px;
-        }
+        .input-group { margin-bottom: 20px; }
         .input-group label {
             display: block;
             font-size: 14px;
@@ -193,10 +192,7 @@
             background-color: var(--card-bg);
             box-shadow: 0 0 0 3px rgba(243, 115, 33, 0.1);
         }
-        .radio-group {
-            display: flex;
-            gap: 8px;
-        }
+        .radio-group { display: flex; gap: 8px; }
         .radio-group label {
             flex: 1;
             text-align: center;
@@ -209,9 +205,7 @@
             cursor: pointer;
             margin-bottom: 0;
         }
-        .radio-group input[type="radio"] {
-            display: none;
-        }
+        .radio-group input[type="radio"] { display: none; }
         .radio-group input[type="radio"]:checked + label {
             background-color: var(--light-orange);
             border-color: var(--mirae-orange);
@@ -221,7 +215,7 @@
 
         /* --- 진단 결과 카드 --- */
         .result-card {
-            display: none; /* JS로 제어 */
+            display: none;
             background-color: var(--text-main);
             color: #fff;
             margin-top: 24px;
@@ -238,7 +232,7 @@
         .result-highlight .gap-value {
             font-size: 24px;
             font-weight: 700;
-            color: #FFB373; /* 어두운 배경을 위한 밝은 오렌지 */
+            color: #FFB373;
             margin-top: 8px;
         }
         .recommendation {
@@ -381,7 +375,23 @@
             z-index: 1000;
         }
     </style>
-</head>
+
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        
+        // 🚨 여기에 본인의 픽셀 ID를 넣어주세요. (예: 1234567890)
+        fbq('init', '여기에_픽셀_ID_입력'); 
+        fbq('track', 'PageView'); 
+    </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=여기에_픽셀_ID_입력&ev=PageView&noscript=1"/></noscript>
+    </head>
 <body>
 
 <div class="app-container">
@@ -603,23 +613,27 @@
         <p class="section-desc">간단한 정보 입력 후 전문적인 진단을 받아보세요.</p>
         
         <div class="card" style="border: 2px solid var(--mirae-navy);">
-            <form id="consultForm" onsubmit="submitForm(event)">
+            <form id="consultForm" name="consultForm" data-netlify="true" netlify-honeypot="bot-field" onsubmit="submitForm(event)">
+                <p style="display: none;">
+                    <label>Don’t fill this out if you're human: <input name="bot-field" /></label>
+                </p>
+                <input type="hidden" name="form-name" value="consultForm" />
+
                 <div class="input-group">
                     <label>이름</label>
-                    <input type="text" id="userName" placeholder="이름을 입력해주세요" required />
+                    <input type="text" id="userName" name="userName" placeholder="이름을 입력해주세요" required />
                 </div>
                 <div class="input-group">
                     <label>연락처</label>
-                    <input type="tel" id="userPhone" placeholder="010-0000-0000" maxlength="13" required />
+                    <input type="tel" id="userPhone" name="userPhone" placeholder="010-0000-0000" maxlength="13" required />
                 </div>
                 <div class="input-group">
                     <label>생년월일 6자리</label>
-                    <!-- id를 userDob로 변경하고 숫자 6자리만 입력되도록 maxlength 추가 -->
-                    <input type="tel" id="userDob" placeholder="예: 720101" maxlength="6" required />
+                    <input type="tel" id="userDob" name="userDob" placeholder="예: 720101" maxlength="6" required />
                 </div>
                 <div class="input-group">
                     <label>월 납입 가능 금액</label>
-                    <select id="userSaveAmount" required>
+                    <select id="userSaveAmount" name="userSaveAmount" required>
                         <option value="">선택해주세요</option>
                         <option value="20">20만 원 이하</option>
                         <option value="50">30만 원 ~ 50만 원</option>
@@ -629,7 +643,7 @@
                 </div>
                 <div class="input-group">
                     <label>관심 목적 (택 1)</label>
-                    <select id="userInterest" required>
+                    <select id="userInterest" name="userInterest" required>
                         <option value="">선택해주세요</option>
                         <option value="living">노후 생활비</option>
                         <option value="pension">개인연금</option>
