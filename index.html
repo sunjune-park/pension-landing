@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -613,7 +612,7 @@ HTML
         <p class="section-desc">간단한 정보 입력 후 전문적인 진단을 받아보세요.</p>
         
         <div class="card" style="border: 2px solid var(--mirae-navy);">
-            <form id="consultForm" name="consultForm" data-netlify="true" netlify-honeypot="bot-field" onsubmit="submitForm(event)">
+            <form id="consultForm" name="consultForm" method="POST" data-netlify="true" netlify-honeypot="bot-field">
                 <p style="display: none;">
                     <label>Don’t fill this out if you're human: <input name="bot-field" /></label>
                 </p>
@@ -707,58 +706,85 @@ HTML
         resultCard.scrollIntoView({behavior: 'smooth', block: 'center'});
     }
 
-    // 폼 제출 로직 (유효성 검증 + 픽셀 발송 + Netlify AJAX 제출)
-    function submitForm(e) {
-        e.preventDefault(); // 기본 새로고침 방지
-        
-        const name = document.getElementById('userName').value;
-        const phone = document.getElementById('userPhone').value;
-        const dob = document.getElementById('userDob').value;
-        
-        // 1. 이름 검증
-        const nameRegex = /^[가-힣]{2,}$/;
-        if(!nameRegex.test(name)) {
-            alert('정확한 이름을 한글로만 입력해주세요. (영문, 특수문자, 공백 제외)');
-            document.getElementById('userName').focus();
-            return;
-        }
-        
-        // 2. 연락처 검증
-        const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
-        if(!phoneRegex.test(phone)) {
-            alert('올바른 연락처 형식을 입력해주세요.\n(예: 010-1234-5678 또는 01012345678)');
-            document.getElementById('userPhone').focus();
-            return;
-        }
+    // 👉 수정 2: Netlify 폼 AJAX 전송 및 메타 픽셀 이벤트 로직 (이벤트 리스너 방식으로 교체)
+    const consultForm = document.getElementById('consultForm');
+    
+    if (consultForm) {
+        consultForm.addEventListener('submit', function(e) {
+            
+            const nameEl = document.getElementById('userName');
+            const phoneEl = document.getElementById('userPhone');
+            const dobEl = document.getElementById('userDob');
+            
+            if (nameEl && phoneEl && dobEl) {
+                const name = nameEl.value;
+                const phone = phoneEl.value;
+                const dob = dobEl.value;
+                
+                // 1. 이름 검증
+                const nameRegex = /^[가-힣]{2,}$/;
+                if(!nameRegex.test(name)) {
+                    e.preventDefault(); 
+                    e.stopImmediatePropagation();
+                    alert('정확한 이름을 한글로만 입력해주세요. (영문, 특수문자, 공백 제외)');
+                    nameEl.focus();
+                    return false; 
+                }
+                
+                // 2. 연락처 검증
+                const phoneRegex = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
+                if(!phoneRegex.test(phone)) {
+                    e.preventDefault(); 
+                    e.stopImmediatePropagation();
+                    alert('올바른 연락처 형식을 입력해주세요.\n(예: 010-1234-5678 또는 01012345678)');
+                    phoneEl.focus();
+                    return false; 
+                }
 
-        // 3. 생년월일 검증
-        const dobRegex = /^[0-9]{6}$/;
-        if(!dobRegex.test(dob)) {
-            alert('생년월일 6자리를 정확히 숫자로만 입력해주세요.\n(예: 720101)');
-            document.getElementById('userDob').focus();
-            return;
-        }
-
-        // 💡 모든 검증을 통과했을 때 Netlify 전송 및 메타 픽셀 '등록 완료' 이벤트 발생
-        const formElement = document.getElementById('consultForm');
-        const formData = new FormData(formElement);
-
-        fetch("/", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(formData).toString()
-        })
-        .then(() => {
-            // 메타 픽셀 '등록 완료(CompleteRegistration)' 이벤트 전송
-            if (typeof fbq === 'function') {
-                fbq('track', 'CompleteRegistration');
+                // 3. 생년월일 검증
+                const dobRegex = /^[0-9]{6}$/;
+                if(!dobRegex.test(dob)) {
+                    e.preventDefault(); 
+                    e.stopImmediatePropagation();
+                    alert('생년월일 6자리를 정확히 숫자로만 입력해주세요.\n(예: 720101)');
+                    dobEl.focus();
+                    return false; 
+                }
             }
-            alert('진단 신청이 완료되었습니다. 담당자가 곧 연락드리겠습니다.');
-            formElement.reset(); // 성공 후 폼 초기화
-        })
-        .catch((error) => {
-            console.error(error);
-            alert('신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            
+            // 검증 통과 시 Netlify 기본 전송을 막고 AJAX로 백그라운드 전송
+            e.preventDefault(); 
+            
+            const btn = consultForm.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            
+            btn.innerText = '진단 신청 중...';
+            btn.disabled = true;
+
+            const formData = new FormData(consultForm);
+            
+            fetch("/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(formData).toString()
+            })
+            .then(() => {
+                // 페이스북 픽셀 'CompleteRegistration' 이벤트 전송
+                if (typeof fbq === 'function') {
+                    fbq('track', 'CompleteRegistration');
+                }
+                alert('진단 신청이 완료되었습니다. 담당자가 곧 연락드리겠습니다.');
+                consultForm.reset(); // 성공 후 폼 초기화
+                
+                btn.innerText = originalText;
+                btn.disabled = false;
+            })
+            .catch((error) => {
+                console.error(error);
+                alert('신청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
         });
     }
 </script>
