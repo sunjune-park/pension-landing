@@ -701,9 +701,10 @@
         const phone = document.getElementById('userPhone').value;
         const dob = document.getElementById('userDob').value;
         
-        // 1. 이름 검증
-        if(name.length < 2) {
-            alert('정확한 이름을 입력해주세요.');
+        // 1. 이름 검증 (완성형 한글 2자 이상만 허용. 영문, 숫자, 특수문자, 공백 차단)
+        const nameRegex = /^[가-힣]{2,}$/;
+        if(!nameRegex.test(name)) {
+            alert('정확한 이름을 한글로만 입력해주세요. (영문, 특수문자, 공백 제외)');
             document.getElementById('userName').focus();
             return;
         }
